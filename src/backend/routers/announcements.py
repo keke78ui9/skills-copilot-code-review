@@ -33,15 +33,22 @@ router = APIRouter(prefix="/announcements", tags=["announcements"])
 
 @router.get("/", response_model=List[Announcement])
 def list_announcements():
-    now = datetime.utcnow().isoformat()
+    today = date.today().isoformat()
     # Only return announcements that are not expired
     docs = announcements_collection.find({
         "$or": [
-            {"expiration_date": {"$gte": now}},
+            {"expiration_date": {"$gte": today}},
             {"expiration_date": None}
         ]
     })
-    return [Announcement(**doc) for doc in docs]
+
+    items: List[Announcement] = []
+    for doc in docs:
+        if "_id" in doc:
+            doc["_id"] = str(doc["_id"])
+        items.append(Announcement(**doc))
+
+    return items
 
 @router.post("/", response_model=Announcement, status_code=status.HTTP_201_CREATED)
 def create_announcement(data: AnnouncementCreate, user=Depends(get_current_user)):
