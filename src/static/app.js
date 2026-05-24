@@ -186,7 +186,15 @@
 
   // Show/hide manage announcements button based on auth
   function updateAnnouncementsAuthUI() {
-    if (currentUser) {
+    let user = null;
+    try {
+      const saved = localStorage.getItem("currentUser");
+      user = saved ? JSON.parse(saved) : null;
+    } catch {
+      user = null;
+    }
+
+    if (user) {
       manageAnnouncementsBtn.classList.remove("hidden");
     } else {
       manageAnnouncementsBtn.classList.add("hidden");
