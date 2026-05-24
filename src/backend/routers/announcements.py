@@ -54,10 +54,16 @@ def list_announcements():
 def create_announcement(data: AnnouncementCreate, user=Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
+
     doc = data.dict()
     doc["created_by"] = user["username"]
-    result = announcements_collection.insert_one(doc)
-    doc["_id"] = str(result.inserted_id)
+
+    # Use string IDs (consistent with other collections in this codebase)
+    from uuid import uuid4
+
+    doc["_id"] = uuid4().hex
+    announcements_collection.insert_one(doc)
+
     return Announcement(**doc)
 
 @router.put("/{announcement_id}", response_model=Announcement)
@@ -67,13 +73,18 @@ def update_announcement(announcement_id: str, data: AnnouncementUpdate, user=Dep
     update_data = {k: v for k, v in data.dict().items() if v is not None}
     if not update_data:
         raise HTTPException(status_code=400, detail="No fields to update")
+
+    from pymongo import ReturnDocument
+
     result = announcements_collection.find_one_and_update(
         {"_id": announcement_id},
         {"$set": update_data},
-        return_document=True
+        return_document=ReturnDocument.AFTER
     )
     if not result:
         raise HTTPException(status_code=404, detail="Announcement not found")
+
+    result["_id"] = str(result.get("_id"))
     return Announcement(**result)
 
 @router.delete("/{announcement_id}", status_code=status.HTTP_204_NO_CONTENT)
