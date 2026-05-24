@@ -54,6 +54,7 @@ def init_database():
     # Initialize announcements if empty
     if announcements_collection.count_documents({}) == 0:
         announcements_collection.insert_one({
+            "_id": "welcome_announcement",
             "title": "Welcome to Mergington High!",
             "message": "School will be closed on Monday for a public holiday.",
             "start_date": None,
