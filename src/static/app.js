@@ -137,15 +137,27 @@
       expiration_date: announcementExpirationDateInput.value,
     };
     try {
+      const teacherUsername = (() => {
+        try {
+          const saved = localStorage.getItem("currentUser");
+          return saved ? JSON.parse(saved)?.username : null;
+        } catch {
+          return null;
+        }
+      })();
+      const authQS = teacherUsername
+        ? `?teacher_username=${encodeURIComponent(teacherUsername)}`
+        : "";
+
       let res;
       if (id) {
-        res = await fetch(`/announcements/${id}`, {
+        res = await fetch(`/announcements/${id}${authQS}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
       } else {
-        res = await fetch(`/announcements/`, {
+        res = await fetch(`/announcements/${authQS}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -163,7 +175,19 @@
   async function deleteAnnouncement(id) {
     if (!confirm("Delete this announcement?")) return;
     try {
-      const res = await fetch(`/announcements/${id}`, { method: "DELETE" });
+      const teacherUsername = (() => {
+        try {
+          const saved = localStorage.getItem("currentUser");
+          return saved ? JSON.parse(saved)?.username : null;
+        } catch {
+          return null;
+        }
+      })();
+      const authQS = teacherUsername
+        ? `?teacher_username=${encodeURIComponent(teacherUsername)}`
+        : "";
+
+      const res = await fetch(`/announcements/${id}${authQS}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete");
       await loadAnnouncementsList();
       await refreshAnnouncementsBanner();
