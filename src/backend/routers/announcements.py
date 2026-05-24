@@ -1,10 +1,14 @@
-from fastapi import APIRouter, HTTPException, Depends, status
-from ..database import announcements_collection
-from datetime import datetime
+from fastapi import APIRouter, HTTPException, Depends, status, Query
+from ..database import announcements_collection, teachers_collection
+from datetime import datetime, date
 from typing import List, Optional
 from pydantic import BaseModel, Field
-from .auth import get_current_user
 
+
+def get_current_user(teacher_username: Optional[str] = Query(None)):
+    if not teacher_username:
+        return None
+    return teachers_collection.find_one({"_id": teacher_username})
 class Announcement(BaseModel):
     id: Optional[str] = Field(None, alias="_id")
     title: str
